@@ -1,59 +1,43 @@
 
-class Stone():
-    def __init__(self, value, index, head=None, tail=None):
-        self.value = value
-        self.index = index
+def step(value, steps, visited):
+    if steps == 0:
+        return 1
 
-        self.head = head
-        if head is None and index > 0:
-            self.head = index - 1
+    if (value, steps) in visited:
+        return visited[(value, steps)]
 
-        self.tail = tail
+    new_value = value
+    split_stones = 0
+    if value == 0:
+        new_value = 1
+    else:
+        s = list(str(value))
+        if len(s) % 2 == 0:
+            mid = round(len(s) / 2)
+            new_value = int("".join(s[:mid]))
+            split = int("".join(s[-mid:]))
 
-    def step(self, stones):
-        if self.value == 0:
-            self.value = 1
+            split_stones = step(split, steps - 1, visited)
         else:
-            s = list(str(self.value))
-            if len(s) % 2 == 0:
-                mid = round(len(s) / 2)
-                a = int("".join(s[:mid]))
-                b = int("".join(s[-mid:]))
+            new_value = value * 2024
 
-                split = Stone(b, len(stones), self.index, self.tail)
-                self.tail = len(stones)
-                self.value = a
-                stones.append(split)
+    stones = step(new_value, steps - 1, visited)
+    visited[(value, steps)] = stones + split_stones
 
-            else:
-                self.value *= 2024
+    return stones + split_stones
 
-    def __repr__(self):
-        return repr(self.value)
-
-def step(stones):
-    stones_len = len(stones)
-    for i in range(stones_len):
-        stone = stones[i]
-        stone.step(stones)
-
+visited = dict()
 stones = []
 with open("input.txt", "r") as f:
-    for i, s in enumerate(list(map(int, f.readline().strip().split()))):
-        stones.append(Stone(s, i, tail=i+1))
+    stones = list(map(int, f.readline().strip().split()))
 
-stones[-1].tail = None
+part1 = 0
+for stone in stones:
+    part1 += step(stone, 25, visited)
 
-for i in range(25):
-    step(stones)
-
-part1 = len(stones)
-
-for i in range(75 - 25):
-    step(stones)
-    print(f"{i+25}: {len(stones)}")
-
-part2 = len(stones)
+part2 = 0
+for stone in stones:
+    part2 += step(stone, 75, visited)
 
 print(f"Part 1: {part1}")
 print(f"Part 2: {part2}")
